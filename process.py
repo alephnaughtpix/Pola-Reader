@@ -28,7 +28,7 @@ SHOWS_DIRECTORY = './shows'
 THEME_TUNE = True           # OPTIONAL: Include the unofficial theme tune "Sailing By" before the forecast. (If you have an MP3 of it.)
 REMOVE_TEMP_FILES = True    # Remove temp files after processsing
 PITCH_SHIFT = True          # Pitch shift voice down
-COMPRESS_DYNAMICS = True    # Compress overall result
+COMPRESS_DYNAMICS = False   # Compress overall result
 
 
 def create_show( show ):
@@ -38,7 +38,10 @@ def create_show( show ):
     script_filename = 'script.txt'      # Human readable version of Shipping Forecast
     source_mp3 = "speech.mp3"           # Text to speech result
     pitch_file = "output_pitch.flac"    # Pitch-shifted Text to speech result
-    theme_mp3 = show['intro_theme']     # Intro theme
+    if 'intro_theme' in show:
+        theme_mp3 = show['intro_theme']     # Intro theme
+    else:
+        theme_mp3 = None
                                         # ^^^ You'll need to supply this yourself!!!
     combined_file = "output_combined.mp3"
     output_file = "output.mp3"
@@ -84,7 +87,7 @@ def create_show( show ):
     if os.path.exists(os.path.join(working_directory,output_file)):
         os.remove(os.path.join(working_directory,output_file))
             
-    if THEME_TUNE:
+    if theme_mp3:
         theme_src = AudioSegment.from_mp3(os.path.join(working_directory, 'media', theme_mp3)).normalize()        # Get theme tune
         feature_src = AudioSegment.from_file(os.path.join(working_directory,speech_file)).normalize()   # Get spoken word
         programme_start = len(theme_src) + show['programme_start']      # Speech starts x seconds before the theme is complete
@@ -97,8 +100,8 @@ def create_show( show ):
         if REMOVE_TEMP_FILES:
             os.rename(os.path.join(working_directory,combined_file), os.path.join(working_directory,output_file))
     else:
-        if REMOVE_TEMP_FILES:
-            os.rename(os.path.join(working_directory,speech_file), os.path.join(working_directory,output_file))
+        feature_src = AudioSegment.from_file(os.path.join(working_directory,speech_file)).normalize()
+        feature_src.export(os.path.join(working_directory,output_file), format="mp3")
             
     if REMOVE_TEMP_FILES:
         os.remove(os.path.join(working_directory,speech_file))
